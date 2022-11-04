@@ -36,8 +36,8 @@ private:
     uint32_t m_IndexCount;
 
     glm::mat4* m_UBOData;
-    std::vector<Vertex> temp;
-
+    std::vector<glm::vec3> vertices;
+    std::vector<unsigned short> indices;
     std::shared_ptr<Camera> m_Camera;
     uint32_t m_ViewportWidth, m_ViewportHeight;
 };

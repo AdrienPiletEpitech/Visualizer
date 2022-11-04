@@ -18,133 +18,101 @@
 
 #include "Vertex.hpp"
 
-static std::vector<Vertex> loadOBJ(const char* file_name)
-{
-    int index = 0;
-    std::vector<glm::fvec3> vertex_position;
-    std::vector<glm::fvec2> vertex_texcoord;
-    std::vector<glm::fvec3> vertex_normal;
+bool loadOBJ(
+	const char* path,
+	std::vector<glm::vec3>& out_vertices,
+	std::vector<glm::vec2>& out_uvs,
+	std::vector<glm::vec3>& out_normals
+) {
+	printf("Loading OBJ file %s...\n", path);
 
-    //face vectors
-    std::vector<GLint> vertex_position_indicies;
-    std::vector<GLint> vertex_texcoord_indicies;
-    std::vector<GLint> vertex_normal_indicies;
-
-    std::vector<Vertex> vertices;
-
-    std::stringstream ss;
-    std::ifstream in_file(file_name);
-    std::string line = "";
-    std::string prefix = "";
-    glm::vec3 temp_vec3;
-    glm::vec2 temp_vec2;
-    GLint temp_glint = 0;
+	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+	std::vector<glm::vec3> temp_vertices;
+	std::vector<glm::vec2> temp_uvs;
+	std::vector<glm::vec3> temp_normals;
 
 
+	FILE* file = fopen(path, "r");
+	if (file == NULL) {
+		printf("Impossible to open the file ! Are you in the right path ? See Tutorial 1 for details\n");
+		getchar();
+		return false;
+	}
 
-    if (!in_file.is_open())
-    {
-        throw "Error obj";
-    }
+	while (1) {
 
+		char lineHeader[128];
+		// read the first word of the line
+		int res = fscanf(file, "%s", lineHeader);
+		if (res == EOF)
+			break; // EOF = End Of File. Quit the loop.
 
-    while (std::getline(in_file, line))
-    {
-        //Get the prefix of the line
-        ss.clear();
-        ss.str(line);
-        ss >> prefix;
+		// else : parse lineHeader
 
-        if (prefix == "#")
-        {
+		if (strcmp(lineHeader, "v") == 0) {
+			glm::vec3 vertex;
+			fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+			temp_vertices.push_back(vertex);
+		}
+		else if (strcmp(lineHeader, "vt") == 0) {
+			glm::vec2 uv;
+			fscanf(file, "%f %f\n", &uv.x, &uv.y);
+			uv.y = -uv.y; // Invert V coordinate since we will only use DDS texture, which are inverted. Remove if you want to use TGA or BMP loaders.
+			temp_uvs.push_back(uv);
+		}
+		else if (strcmp(lineHeader, "vn") == 0) {
+			glm::vec3 normal;
+			fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+			temp_normals.push_back(normal);
+		}
+		else if (strcmp(lineHeader, "f") == 0) {
+			std::string vertex1, vertex2, vertex3;
+			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+			if (matches != 9) {
+				printf("File can't be read by our simple parser :-( Try exporting with other options\n");
+				fclose(file);
+				return false;
+			}
+			vertexIndices.push_back(vertexIndex[0]);
+			vertexIndices.push_back(vertexIndex[1]);
+			vertexIndices.push_back(vertexIndex[2]);
+			uvIndices.push_back(uvIndex[0]);
+			uvIndices.push_back(uvIndex[1]);
+			uvIndices.push_back(uvIndex[2]);
+			normalIndices.push_back(normalIndex[0]);
+			normalIndices.push_back(normalIndex[1]);
+			normalIndices.push_back(normalIndex[2]);
+		}
+		else {
+			// Probably a comment, eat up the rest of the line
+			char stupidBuffer[1000];
+			fgets(stupidBuffer, 1000, file);
+		}
 
-        }
-        else if (prefix == "o")
-        {
+	}
 
-        }
-        else if (prefix == "s")
-        {
+	// For each vertex of each triangle
+	for (unsigned int i = 0; i < vertexIndices.size(); i++) {
 
-        }
-        else if (prefix == "use_mtl")
-        {
+		// Get the indices of its attributes
+		unsigned int vertexIndex = vertexIndices[i];
+		unsigned int uvIndex = uvIndices[i];
+		unsigned int normalIndex = normalIndices[i];
 
-        }
-        else if (prefix == "v") //Vertex position
-        {
-            ss >> temp_vec3.x >> temp_vec3.y >> temp_vec3.z;
-            vertex_position.push_back(temp_vec3);
-        }
-        else if (prefix == "vt")
-        {
-            ss >> temp_vec2.x >> temp_vec2.y;
-            vertex_texcoord.push_back(temp_vec2);
-        }
-        else if (prefix == "vn")
-        {
-            ss >> temp_vec3.x >> temp_vec3.y >> temp_vec3.z;
-            vertex_normal.push_back(temp_vec3);
-        }
-        else if (prefix == "f")
-        {
-            int counter = 0;
-            while (ss >> temp_glint)
-            {
-                //Pushing indices into correct arrays
-                if (counter == 0)
-                    vertex_position_indicies.push_back(temp_glint);
-                else if (counter == 1)
-                    vertex_texcoord_indicies.push_back(temp_glint);
-                else if (counter == 2)
-                    vertex_normal_indicies.push_back(temp_glint);
+		// Get the attributes thanks to the index
+		glm::vec3 vertex = temp_vertices[vertexIndex - 1];
+		glm::vec2 uv = temp_uvs[uvIndex - 1];
+		glm::vec3 normal = temp_normals[normalIndex - 1];
 
-                //Handling characters
-                if (ss.peek() == '/')
-                {
-                    ++counter;
-                    ss.ignore(1, '/');
-                }
-                else if (ss.peek() == ' ')
-                {
-                    ++counter;
-                    ss.ignore(1, ' ');
-                }
+		// Put the attributes in buffers
+		out_vertices.push_back(vertex);
+		out_uvs.push_back(uv);
+		out_normals.push_back(normal);
 
-                //Reset the counter
-                if (counter > 2)
-                    counter = 0;
-            }
-        }
-        else
-        {
-
-        }
-     
-    }
-
-    std::cout << "hello" << "\n";
-    //Build final vertex array (mesh)
-    vertices.resize(vertex_position_indicies.size(), Vertex());
-
-    //Load in all indices
-    std::cout << "hello2" << "\n";
-    for (size_t i = 0; i < vertices.size(); ++i)
-    {
-        vertices[i].position = vertex_position[vertex_position_indicies[i] - 1];
-        vertices[i].texcoord = vertex_texcoord[vertex_texcoord_indicies[i] - 1];
-        vertices[i].normal = vertex_normal[vertex_normal_indicies[i] - 1];
-        vertices[i].color = glm::vec3(1.f, 1.f, 1.f);
-    }
-    std::cout << "hello3" << "\n";
-
-    //DEBUG
-    std::cout << "Nr of vertices: " << vertices.size() << "\n";
-    std::cout << "hello4" << "\n";
-
-    //Loaded success
-    std::cout << "OBJ file loaded!" << "\n";
-    std::cout << "hello5" << "\n";
-    return vertices;
+	}
+	printf("finished loading OBJ file %s...\n", path);
+	fclose(file);
+	return true;
 }
 

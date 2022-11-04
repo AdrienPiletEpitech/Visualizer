@@ -18,14 +18,16 @@ BEGIN_VISUALIZER_NAMESPACE
 
 bool Renderer::Initialize()
 {
-    temp = loadOBJ("C:/Users/Chibi/Downloads/project/res/desert.obj");
-   
+
+    std::vector<glm::vec2> uvs;
+    std::vector<glm::vec3> normals; // Won't be used at the moment.
+    bool res = loadOBJ("../../res/palm.obj", vertices, uvs, normals);
 
     GL_CALL(glCreateBuffers, 1, &m_UBO);
     GL_CALL(glNamedBufferStorage, m_UBO, sizeof(glm::mat4), glm::value_ptr(m_Camera->GetViewProjectionMatrix()), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 
     GL_CALL(glCreateBuffers, 1, &m_VBO);
-    GL_CALL(glNamedBufferStorage, m_VBO, sizeof(Vertex) * temp.size(), temp.data(), 0);
+    GL_CALL(glNamedBufferStorage, m_VBO, sizeof(glm::vec3) * vertices.size(), vertices.data(), 0);
 
     GL_CALL(glCreateVertexArrays, 1, &m_VAO);
     GL_CALL(glBindVertexArray, m_VAO);
@@ -34,9 +36,12 @@ bool Renderer::Initialize()
     GL_CALL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, m_IBO);
 
     GL_CALL(glEnableVertexAttribArray, 0);
-    GL_CALL(glVertexAttribPointer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), nullptr);
+    GL_CALL(glVertexAttribPointer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
     GL_CALL(glEnableVertexAttribArray, 1);
-    GL_CALL(glVertexAttribPointer, 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<GLvoid*>(sizeof(glm::vec3)));
+    GL_CALL(glVertexAttribPointer, 1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), reinterpret_cast<GLvoid*>(sizeof(glm::vec3)));
+
+
+
 
     GL_CALL(glBindVertexArray, 0);
 
@@ -163,7 +168,7 @@ void Renderer::Render()
 
     GL_CALL(glBindBufferBase, GL_UNIFORM_BUFFER, 0, m_UBO);
     GL_CALL(glBindVertexArray, m_VAO);
-    GL_CALL(glDrawArrays, GL_TRIANGLES, 0, temp.size());
+    GL_CALL(glDrawArrays, GL_TRIANGLES, 0, vertices.size());
     GL_CALL(glBindVertexArray, 0);
     GL_CALL(glBindBufferBase, GL_UNIFORM_BUFFER, 0, 0);
 
