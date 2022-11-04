@@ -1,5 +1,6 @@
 #ifndef RENDERER_HPP
 #define RENDERER_HPP
+#include "Vertex.hpp"
 
 BEGIN_VISUALIZER_NAMESPACE
 
@@ -35,6 +36,7 @@ private:
     uint32_t m_IndexCount;
 
     glm::mat4* m_UBOData;
+    std::vector<Vertex> temp;
 
     std::shared_ptr<Camera> m_Camera;
     uint32_t m_ViewportWidth, m_ViewportHeight;

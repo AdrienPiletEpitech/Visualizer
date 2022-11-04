@@ -8,9 +8,6 @@
 #include <camera.hpp>
 #include <renderer.hpp>
 
-#include <OBJLoader.hpp>
-#include <Vertex.hpp>
-
 BEGIN_VISUALIZER_NAMESPACE
 
 static LRESULT CALLBACK WindowEvenHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -524,7 +521,7 @@ void Window::Run()
     {
         return;
     }
-
+    
     ShowWindow(m_hWnd, SW_SHOW);
 
     glEnable(GL_CULL_FACE);
@@ -542,10 +539,6 @@ void Window::Run()
         std::cerr << "Renderer failed to initialize\n";
         return;
     }
-  
-    std::vector<Vertex> temp;
-    temp = loadOBJ("C:/Users/Chibi/Downloads/project/res/desert.obj");
-
         
     std::chrono::duration<float> dt;
     std::chrono::duration<float> totalElapsedTime;

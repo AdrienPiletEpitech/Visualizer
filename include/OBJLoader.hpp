@@ -20,6 +20,7 @@
 
 static std::vector<Vertex> loadOBJ(const char* file_name)
 {
+    int index = 0;
     std::vector<glm::fvec3> vertex_position;
     std::vector<glm::fvec2> vertex_texcoord;
     std::vector<glm::fvec3> vertex_normal;
@@ -46,8 +47,8 @@ static std::vector<Vertex> loadOBJ(const char* file_name)
         throw "Error obj";
     }
 
-    printf("hello");
-     while (std::getline(in_file, line))
+
+    while (std::getline(in_file, line))
     {
         //Get the prefix of the line
         ss.clear();
@@ -119,13 +120,15 @@ static std::vector<Vertex> loadOBJ(const char* file_name)
         {
 
         }
+     
     }
-     printf("hello2");
 
+    std::cout << "hello" << "\n";
     //Build final vertex array (mesh)
     vertices.resize(vertex_position_indicies.size(), Vertex());
 
     //Load in all indices
+    std::cout << "hello2" << "\n";
     for (size_t i = 0; i < vertices.size(); ++i)
     {
         vertices[i].position = vertex_position[vertex_position_indicies[i] - 1];
@@ -133,12 +136,15 @@ static std::vector<Vertex> loadOBJ(const char* file_name)
         vertices[i].normal = vertex_normal[vertex_normal_indicies[i] - 1];
         vertices[i].color = glm::vec3(1.f, 1.f, 1.f);
     }
+    std::cout << "hello3" << "\n";
 
     //DEBUG
     std::cout << "Nr of vertices: " << vertices.size() << "\n";
+    std::cout << "hello4" << "\n";
 
     //Loaded success
     std::cout << "OBJ file loaded!" << "\n";
+    std::cout << "hello5" << "\n";
     return vertices;
 }
 
